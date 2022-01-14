@@ -443,6 +443,14 @@ jobs:
         arch:
           - amd64
           - arm64
+        build_elixir:
+          - no_elixir
+        include:
+          - profile: emqx
+            otp: 24.1.5-3
+            elixir: 1.13.1
+            arch: amd64
+            build_elixir: with_elixir
 
     steps:
     - uses: actions/download-artifact@v2
@@ -458,6 +466,7 @@ jobs:
         platforms: all
     - uses: docker/metadata-action@v3
       id: meta
+      if: ${{ matrix.build_elixir == 'no_elixir' }}
       with:
         images: ${{ github.repository_owner }}/${{ matrix.profile }}
         flavor: |
@@ -471,7 +480,7 @@ jobs:
           org.opencontainers.image.otp.version=${{ matrix.otp }}
     - name: docker metadata for elixir image
       uses: docker/metadata-action@v3
-      if: ${{ matrix.profile == 'emqx' }}
+      if: ${{ matrix.build_elixir == 'with_elixir' }}
       id: meta-elixir
       with:
         images: ${{ github.repository_owner }}/${{ matrix.profile }}
@@ -493,7 +502,7 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_TOKEN }}
     - uses: docker/build-push-action@v2
       with:
-        push: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
+        push: ${{ github.event_name == 'release' && !github.event.release.prerelease && matrix.build_elixir == 'no_elixir' }}
         pull: true
         no-cache: true
         platforms: linux/amd64,linux/arm64
@@ -509,7 +518,7 @@ jobs:
       uses: docker/build-push-action@v2
       if: ${{ matrix.profile == 'emqx' }}
       with:
-        push: ${{ github.event_name == 'release' && !github.event.release.prerelease }}
+        push: ${{ github.event_name == 'release' && !github.event.release.prerelease && matrix.build_elixir == 'with_elixir' }}
         pull: true
         no-cache: true
         platforms: linux/amd64,linux/arm64
@@ -528,7 +537,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
     - name: Push image to aws ecr
-      if: github.event_name == 'release' && !github.event.release.prerelease && matrix.profile == 'emqx'
+      if: github.event_name == 'release' && !github.event.release.prerelease && matrix.profile == 'emqx' && matrix.build_elixir == 'no_elixir'
       run: |
         version=${GITHUB_REF##*/}
         docker pull emqx/emqx:${version#v}
@@ -536,7 +545,7 @@ jobs:
         aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws
         docker push public.ecr.aws/emqx/emqx:${version#v}
     - name: Push image to aws ecr (elixir)
-      if: github.event_name == 'release' && !github.event.release.prerelease && matrix.profile == 'emqx'
+      if: github.event_name == 'release' && !github.event.release.prerelease && matrix.profile == 'emqx' && matrix.build_elixir == 'with_elixir'
       run: |
         version=${GITHUB_REF##*/}-elixir
         docker pull emqx/emqx:${version#v}
