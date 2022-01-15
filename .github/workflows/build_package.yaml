@@ -77,3 +77,49 @@ jobs:
         with:
           name: ${{ matrix.profile }}
           path: source/_packages/${{ matrix.profile }}/.
+
+  delete-artifact:
+    runs-on: ubuntu-20.04
+    needs: [prepare, mac, linux, docker]
+    steps:
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: source
+
+  upload:
+    runs-on: ubuntu-20.04
+
+    if: startsWith(github.ref, 'refs/tags/')
+
+    needs: [prepare, mac, linux, docker]
+
+    strategy:
+      matrix:
+        profile: ${{fromJSON(needs.prepare.outputs.profiles)}}
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: get_version
+        run: |
+          echo 'version<<EOF' >> $GITHUB_ENV
+          echo ${{ github.ref }} | sed -r  "s ^refs/heads/|^refs/tags/(.*) \1 g" >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+      - uses: actions/download-artifact@v2
+        with:
+          name: ${{ matrix.profile }}
+          path: ./_packages/${{ matrix.profile }}
+      - uses: Rory-Z/upload-release-asset@v1
+        if: github.event_name == 'release' && matrix.profile != 'emqx-ee'
+        with:
+          repo: emqx
+          path: "_packages/${{ matrix.profile }}/emqx-*"
+          token: ${{ github.token }}
+      - uses: Rory-Z/upload-release-asset@v1
+        if: github.event_name == 'release' && matrix.profile == 'emqx-ee'
+        with:
+          repo: emqx-enterprise
+          path: "_packages/${{ matrix.profile }}/emqx-*"
+          token: ${{ github.token }}
+      - uses: geekyeggo/delete-artifact@v1
+        with:
+          name: ${{ matrix.profile }}
