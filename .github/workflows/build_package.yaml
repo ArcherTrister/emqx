@@ -1,4 +1,4 @@
-name: Cross build packages
+name: build package
 
 on:
   schedule:
