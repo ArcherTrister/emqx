@@ -156,17 +156,12 @@ jobs:
           name: ${{ matrix.profile }}
           path: ./_packages/${{ matrix.profile }}
       - uses: Rory-Z/upload-release-asset@v1
-        if: github.event_name == 'release' && matrix.profile != 'emqx-ee'
+        if: matrix.profile != 'emqx-ee'
         with:
           repo: emqx
           path: "_packages/${{ matrix.profile }}/emqx-*"
-          token: ${{ github.token }}
-      - uses: Rory-Z/upload-release-asset@v1
-        if: github.event_name == 'release' && matrix.profile == 'emqx-ee'
-        with:
-          repo: emqx-enterprise
-          path: "_packages/${{ matrix.profile }}/emqx-*"
-          token: ${{ github.token }}
+          token: ${{ secrets.TOKEN }}
+      
       - uses: geekyeggo/delete-artifact@v1
         with:
           name: ${{ matrix.profile }}
