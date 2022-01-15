@@ -54,7 +54,9 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: source
-          path: source.zip  windows:
+          path: source.zip
+          
+  windows:
     runs-on: windows-2019
 
     needs: prepare
