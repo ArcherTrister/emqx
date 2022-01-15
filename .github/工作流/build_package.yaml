@@ -127,7 +127,7 @@ jobs:
 
   delete-artifact:
     runs-on: ubuntu-20.04
-    needs: [prepare]
+    needs: [prepare, windows]
     steps:
       - uses: geekyeggo/delete-artifact@v1
         with:
@@ -138,7 +138,7 @@ jobs:
 
     if: startsWith(github.ref, 'refs/tags/')
 
-    needs: [prepare]
+    needs: [prepare, windows]
 
     strategy:
       matrix:
