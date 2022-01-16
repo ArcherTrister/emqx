@@ -1,0 +1,3 @@
+[submodule "apps/emqx-backend-mysql"]
+	path = apps/emqx-backend-mysql
+	url = https://gitee.com/archertrister/emqx-backend-mysql.git
